@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Resume Analyzer - Ultimate</title>
+
+  <!-- DOCX reader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: url("https://images.unsplash.com/photo-1498050108023-c5249f4df085") no-repeat center/cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: rgba(255,255,255,0.95);
+      padding: 30px;
+      width: 750px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>🚀 AI Resume Analyzer (Ultimate)</h2>
+
+  <input type="file" id="fileInput"><br><br>
+
+  <textarea id="resume" placeholder="Paste resume here..."></textarea><br>
+
+  <button onclick="analyzeResume()">Analyze</button>
+  <button onclick="clearData()" style="background:red;color:white;">Clear</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+
+// FILE HANDLING
+function analyzeResume() {
+  let file = document.getElementById("fileInput").files[0];
+
+  if (file) {
+    if (file.name.toLowerCase().endsWith(".docx")) {
+      let reader = new FileReader();
+      reader.onload = function(e) {
+        mammoth.extractRawText({ arrayBuffer: e.target.result })
+          .then(res => processText(res.value))
+          .catch(() => document.getElementById("result").innerHTML = "Error reading file");
+      };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    let reader = new FileReader();
+    reader.onload = e => processText(e.target.result);
+    reader.readAsText(file);
+    return;
+  }
+
+  processText(document.getElementById("resume").value);
+}
+
+
+// MAIN LOGIC
+function processText(text) {
+
+  if (!text || text.trim() === "") {
+    document.getElementById("result").innerHTML = "Please upload or paste resume.";
+    return;
+  }
+
+  let lower = text.toLowerCase();
+
+  let role = "General";
+  let skills = [];
+  let courses = [];
+  let score = 0;
+
+  // 🔥 ROLE DETECTION
+  const roleMap = [
+    { role: "Middleware Administrator", keywords: ["weblogic","jboss","tomcat","websphere","middleware"] },
+    { role: "DevOps Engineer", keywords: ["aws","azure","docker","kubernetes","devops"] },
+    { role: "Software Developer", keywords: ["java","python","react","node","developer","spring"] },
+    { role: "QA / Testing Engineer", keywords: ["selenium","testing","qa","automation"] },
+    { role: "Data Analyst", keywords: ["sql","power bi","tableau","data analyst"] },
+    { role: "CRM Executive", keywords: ["crm","salesforce"] },
+    { role: "Business Development / Sales", keywords: ["business development","sales","lead generation","client","deal"] },
+    { role: "Marketing", keywords: ["marketing","seo","digital marketing","branding","social media"] },
+    { role: "Finance", keywords: ["finance","accounting","bank"] },
+    { role: "Supply Chain / Logistics", keywords: ["supply chain","logistics","procurement"] },
+    { role: "Operations", keywords: ["operations","process","production"] },
+    { role: "Agriculture / Agri Business", keywords: ["agriculture","agri","farming","abm"] },
+    { 
+      role: "HR", 
+      keywords: [
+        "human resource",
+        "hr executive",
+        "recruitment",
+        "talent acquisition",
+        "payroll",
+        "employee relations",
+        "hr operations"
+      ] 
+    }
+  ];
+
+  for (let r of roleMap) {
+    if (r.keywords.some(k => lower.includes(k))) {
+      role = r.role;
+      break;
+    }
+  }
+
+  // 🎓 COURSES DETECTION (UPDATED)
+  const courseMap = [
+    { name: "MBA", keywords: ["mba","master of business administration"] },
+    { name: "BBA", keywords: ["bba","bachelor of business administration"] },
+    { name: "BCom", keywords: ["bcom","b.com","bachelor of commerce"] },
+    { name: "BTech", keywords: ["btech","b.tech","engineering","bachelor of technology"] },
+    { name: "MTech", keywords: ["mtech","m.tech","master of technology"] },
+    { name: "BSc Agriculture", keywords: ["bsc ag","b.sc agriculture","bsc agriculture","agriculture"] },
+    { name: "ABM (Agri Business Management)", keywords: ["abm","agribusiness","agri business"] }
+  ];
+
+  courseMap.forEach(c => {
+    if (c.keywords.some(k => lower.includes(k))) {
+      courses.push(c.name);
+      score += 2;
+    }
+  });
+
+  // 🧠 SKILLS DETECTION
+  const allSkills = [
+    "communication","teamwork","leadership","problem solving",
+    "java","python","react","node","spring","sql",
+    "aws","azure","docker","kubernetes",
+    "weblogic","jboss","tomcat","websphere",
+    "crm","salesforce","marketing","seo","digital marketing",
+    "excel","power bi","tableau",
+    "logistics","supply chain","procurement",
+    "accounting","finance",
+    "recruitment","training","payroll"
+  ];
+
+  allSkills.forEach(skill => {
+    if (lower.includes(skill)) {
+      skills.push(skill);
+      score++;
+    }
+  });
+
+  // EXPERIENCE
+  if (/(experience|internship)/.test(lower)) score += 2;
+
+  // PROJECT
+  if (lower.includes("project")) score += 1;
+
+  // CERTIFICATION
+  if (lower.includes("certification")) score += 1;
+
+  let rating = Math.min(score, 10);
+
+  let stars = "";
+  for (let i = 1; i <= 10; i++) {
+    stars += i <= rating ? "⭐" : "☆";
+  }
+
+  // OUTPUT
+  document.getElementById("result").innerHTML =
+    "<b>🎯 Role:</b> " + role + "<br><br>" +
+    "<b>🎓 Courses:</b> " + (courses.join(", ") || "Not found") + "<br><br>" +
+    "<b>🧠 Skills:</b> " + (skills.join(", ") || "None") + "<br><br>" +
+    "<b>💪 Strength:</b> " + (rating >= 7 ? "Strong Profile" : "Good Base") + "<br><br>" +
+    "<b>⚠ Weakness:</b> " + (rating < 5 ? "Add more skills & experience" : "Improve achievements") + "<br><br>" +
+    "<b>⭐ Rating:</b> " + stars + " (" + rating + "/10)<br><br>" +
+    "<b>📌 Feedback:</b> " + (rating >= 7 ? "Job-ready resume" : "Needs improvement");
+}
+
+
+// CLEAR
+function clearData() {
+  document.getElementById("resume").value = "";
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("fileInput").value = "";
+}
+
+</script>
+
+</body>
+</html>
